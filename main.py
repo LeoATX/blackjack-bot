@@ -82,7 +82,9 @@ class BotClient(discord.Client):
 
             # This shows the cards after drawn
             self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
-            await self.game_message.add_reaction('🇦')
+            await self.game_message.add_reaction('🇩')
+            await self.game_message.add_reaction('🇸')
+            await self.game_message.add_reaction()
 
         if self.player.total() < 21 and not self.stand and not self.double and not self.blackjack:
             print("Hello World")
