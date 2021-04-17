@@ -78,5 +78,5 @@ class BotClient(discord.Client):
 
 
 env = loadenv.Env()
-key = env.getenv('FACT_CHECKER_TOKEN')
+key = env.getenv('BOT_TOKEN')
 BotClient().run(key)
