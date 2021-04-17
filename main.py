@@ -25,7 +25,15 @@ class BotClient(discord.Client):
         # Player's second hand
         self.player2 = None
 
+        # Boolean attributes
+        # Whether the player wants to hit or stand or blackjack
+        self.stand = False
+        self.double = False
+        self.blackjack = False
+
+        # This is used to keep track of game messages
         self.game_start_message = None
+        self.game_message = None
 
     async def on_ready(self):
         print("{user} ready".format(user=self.user))
@@ -42,9 +50,8 @@ class BotClient(discord.Client):
             self.box.add_field(name="\u200b", value="Every game uses a 52 card deck.\n"
                                                     "Dealer stands on soft 17.")
 
-            game_start_message = await payload.channel.send(content='\u200b', embed=self.box)
-            self.game_start_message = game_start_message
-            await game_start_message.add_reaction('👍')
+            self.game_start_message = await payload.channel.send(content='\u200b', embed=self.box)
+            await self.game_start_message.add_reaction('👍')
 
     async def on_raw_reaction_add(self, payload):
         if payload.user_id == self.user.id:
@@ -68,13 +75,17 @@ class BotClient(discord.Client):
             self.box.clear_fields()
             self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
             self.box.add_field(name="Your hand", value=self.player.return_hand())
-            await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
             # Immediately check for blackjack after drawing cards
             if self.player.total() == 21:
-                self.box.clear_fields()
                 self.box.add_field(name="Blackjack!", value='\u200b')
-                await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
+
+            # This shows the cards after drawn
+            self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
+            await self.game_message.add_reaction('🇦')
+
+        if self.player.total() < 21 and not self.stand and not self.double and not self.blackjack:
+            print("Hello World")
 
 
 env = loadenv.Env()
