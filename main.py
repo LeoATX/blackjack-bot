@@ -59,6 +59,7 @@ class BotClient(discord.Client):
 
         # When the game start embed has been reacted to
         # Starts the game
+        # This is different from other embeds
         if payload.message_id == self.game_start_message.id and payload.emoji.name == '👍':
             # Initiate the game attributes
             self.deck = deck.Deck()
@@ -71,23 +72,62 @@ class BotClient(discord.Client):
             self.house.add(self.deck.draw())
             self.player.add(self.deck.draw())
 
+            # Footer prompt
+            self.box.set_footer(text='\nH to hit, S to stand, and D to double down')
+
             # Populates the embed
             self.box.clear_fields()
             self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
             self.box.add_field(name="Your hand", value=self.player.return_hand())
 
+            self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
+
+            # Adds the buttons (reactions) to play
+            await self.game_message.add_reaction('🇭')
+            await self.game_message.add_reaction('🇸')
+            await self.game_message.add_reaction('🇩')
+
             # Immediately check for blackjack after drawing cards
             if self.player.total() == 21:
                 self.box.add_field(name="Blackjack!", value='\u200b')
-
-            # This shows the cards after drawn
-            self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
-            await self.game_message.add_reaction('🇩')
-            await self.game_message.add_reaction('🇸')
-            await self.game_message.add_reaction()
+                self.blackjack = True
+                self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
         if self.player.total() < 21 and not self.stand and not self.double and not self.blackjack:
-            print("Hello World")
+            if payload.emoji.name == '🇭':
+                # Add a card
+                self.player.add(self.deck.draw())
+
+                # Show the current player hand
+                self.box.clear_fields()
+                self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
+                self.box.add_field(name="Your hand", value=self.player.return_hand())
+                self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
+
+                # Adds the buttons (reactions) to play
+                await self.game_message.add_reaction('🇭')
+                await self.game_message.add_reaction('🇸')
+                await self.game_message.add_reaction('🇩')
+
+            if payload.emoji.name == '🇸':
+                self.stand = True
+
+                # Show the current player hand
+                self.box.clear_fields()
+                self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
+                self.box.add_field(name="Your hand", value=self.player.return_hand())
+                self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
+
+            if payload.emoji.name == '🇩':
+                self.double = True
+                # Add a card
+                self.player.add(self.deck.draw())
+
+                # Show the current player hand
+                self.box.clear_fields()
+                self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
+                self.box.add_field(name="Your hand", value=self.player.return_hand())
+                self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
 
 env = loadenv.Env()
