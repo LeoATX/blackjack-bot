@@ -30,6 +30,7 @@ class BotClient(discord.Client):
         self.stand = False
         self.double = False
         self.blackjack = False
+        self.bust = False
 
         # This is used to keep track of game messages
         self.game_start_message = None
@@ -47,8 +48,9 @@ class BotClient(discord.Client):
         if payload.content == '$blackjack':
             # populates the embed
             self.box.clear_fields()
-            self.box.add_field(name="\u200b", value="Every game uses a 52 card deck.\n"
-                                                    "Dealer stands on soft 17.")
+            self.box.add_field(name="\u200b",
+                               value="Every game uses a 52 card deck.\nDealer stands on soft 17.",
+                               inline=False)
 
             self.game_start_message = await payload.channel.send(content='\u200b', embed=self.box)
             await self.game_start_message.add_reaction('👍')
@@ -78,7 +80,7 @@ class BotClient(discord.Client):
             # Populates the embed
             self.box.clear_fields()
             self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
-            self.box.add_field(name="Your hand", value=self.player.return_hand())
+            self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
 
             self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
@@ -89,7 +91,7 @@ class BotClient(discord.Client):
 
             # Immediately check for blackjack after drawing cards
             if self.player.total() == 21:
-                self.box.add_field(name="Blackjack!", value='\u200b')
+                self.box.add_field(name="Blackjack!", value='\u200b', inline=False)
                 self.blackjack = True
                 self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
@@ -101,7 +103,7 @@ class BotClient(discord.Client):
                 # Show the current player hand
                 self.box.clear_fields()
                 self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
-                self.box.add_field(name="Your hand", value=self.player.return_hand())
+                self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
                 self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
                 # Adds the buttons (reactions) to play
@@ -115,7 +117,7 @@ class BotClient(discord.Client):
                 # Show the current player hand
                 self.box.clear_fields()
                 self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
-                self.box.add_field(name="Your hand", value=self.player.return_hand())
+                self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
                 self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
             if payload.emoji.name == '🇩':
@@ -126,8 +128,16 @@ class BotClient(discord.Client):
                 # Show the current player hand
                 self.box.clear_fields()
                 self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
-                self.box.add_field(name="Your hand", value=self.player.return_hand())
+                self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
                 self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
+
+        if self.player.total() > 21:
+            self.bust = True
+            self.box.add_field(name="\nYou've gone bust.", value='\u200b', inline=False)
+
+        if self.player.total == 21:
+            self.blackjack = True
+            self.box.add_field(name="\nYou've gone bust.", value='\u200b', inline=False)
 
 
 env = loadenv.Env()
