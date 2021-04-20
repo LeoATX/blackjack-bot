@@ -96,11 +96,12 @@ class BotClient(discord.Client):
             await self.game_message.add_reaction('🇩')
 
             # Immediately check for blackjack after drawing cards
-            # if self.player.total() == 21:
-            #     self.box.add_field(name="Blackjack!", value='\u200b', inline=False)
-            #     self.blackjack = True
-            #     self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
+            if self.player.total() == 21:
+                self.box.add_field(name="\u200b\nBlackjack!", value='\u200b', inline=False)
+                self.blackjack = True
+                self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
+        # Player interactions
         if self.player.total() < 21 and not self.stand and not self.double and not self.blackjack:
             if payload.emoji.name == '🇭':
                 # Add a card
@@ -139,9 +140,11 @@ class BotClient(discord.Client):
             self.box.add_field(name="\nYou've gone bust.", value='\u200b', inline=False)
             self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
-        if self.player.total() == 21:
+        # If they reached 21
+        # But not a natural hand
+        if self.player.total() == 21 and not self.blackjack:
             self.blackjack = True
-            self.box.add_field(name="\nBlackjack!", value='\u200b', inline=False)
+            self.box.add_field(name="\u200b\nBlackjack!", value='\u200b', inline=False)
             self.game_message = await self.get_channel(payload.channel_id).send(content='\u200b', embed=self.box)
 
         # Reveals the dealer hand
