@@ -1,3 +1,5 @@
+import asyncio
+
 import loadenv
 import discord  # noqa
 import deck
@@ -15,8 +17,9 @@ class BotClient(discord.Client):
         super().__init__(**options)
 
         # Game embed
-        self.box = self.box = discord.Embed(title="Blackjack\n\n\u200b",
-                                            colour=discord.Colour(0).from_rgb(200, 200, 200))
+        self.box = self.box = discord.Embed(title="Blackjack\u200b",
+                                            colour=discord.Colour(0).from_rgb(200, 200, 200),
+                                            description='\u200b' + '\u2000' * 68 + "\u200b")
 
         # Game attributes
         self.deck = None
@@ -90,7 +93,7 @@ class BotClient(discord.Client):
             self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
 
             # Footer prompt
-            self.box.set_footer(text='\nH to hit, S to stand, and D to double down')
+            self.box.set_footer(text='\n🇭 to hit, 🇸 to stand, and 🇩 to double down')
 
             # Immediately check for blackjack after drawing cards
             if self.player.total() == 21:
@@ -130,6 +133,7 @@ class BotClient(discord.Client):
                 # Do not need to show the players hand
                 # Clear fields only
                 self.box.clear_fields()
+                self.box.set_footer(text=discord.Embed.Empty)
 
             if payload.emoji.name == '🇩':
                 self.double = True
@@ -138,19 +142,28 @@ class BotClient(discord.Client):
 
                 # Show the current game
                 self.box.clear_fields()
+                self.box.set_footer(text=discord.Embed.Empty)
                 self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
                 self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
                 self.game_message = await self.get_channel(payload.channel_id).send(embed=self.box)
 
         if self.player.total() > 21:
             self.bust = True
-            self.box.add_field(name="\nYou've gone bust.", value='\u200b', inline=False)
+            self.box.clear_fields()
+            self.box.set_footer(text=discord.Embed.Empty)
+            self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
+            self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
+            self.box.add_field(name="\u200b\nYou've gone bust.", value='\u200b', inline=False)
             self.game_message = await self.get_channel(payload.channel_id).send(embed=self.box)
 
         # If they reached 21
         # But not a natural hand
         if self.player.total() == 21 and not self.blackjack:
             self.blackjack = True
+            self.box.set_footer(text=discord.Embed.Empty)
+            self.box.clear_fields()
+            self.box.add_field(name="Dealer hand", value=("[" + self.house.card(0) + "] [?]"), inline=False)
+            self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
             self.box.add_field(name="\u200b\nBlackjack!", value='\u200b', inline=False)
             self.game_message = await self.get_channel(payload.channel_id).send(embed=self.box)
 
@@ -158,6 +171,7 @@ class BotClient(discord.Client):
         # Reveals the dealer hand
         # Also starts the dealer drawing process
         if self.stand or self.double or self.bust or self.blackjack:
+            await asyncio.sleep(2.5)
             self.box.set_footer(text=discord.Embed.Empty)
             self.box.clear_fields()
             self.box.add_field(name="Dealer hand", value=self.house.return_hand(), inline=False)
@@ -167,11 +181,28 @@ class BotClient(discord.Client):
             # Dealer keeps drawing cards until soft 17
             # For each card drawn, send an embed
             while self.house.total() <= 17:
+                await asyncio.sleep(2.5)
                 self.house.add(self.deck.draw())
                 self.box.clear_fields()
                 self.box.add_field(name="Dealer hand", value=self.house.return_hand(), inline=False)
                 self.box.add_field(name="Your hand", value=self.player.return_hand(), inline=False)
                 self.game_message = await self.get_channel(payload.channel_id).send(embed=self.box)
+
+            self.box.clear_fields()
+
+            if not self.bust:
+                if self.house.total() > 21:
+                    self.box.add_field(name="The house has gone bust, you won.", value='\u200b', inline=False)
+                if self.house.total() > self.player.total():
+                    self.box.add_field(name="You lost.", value='\u200b', inline=False)
+                if self.house.total() < self.player.total():
+                    self.box.add_field(name="You won.", value='\u200b', inline=False)
+                if self.house.total() == self.player.total():
+                    self.box.add_field(name="Push.", value='\u200b', inline=False)
+            if self.bust:
+                self.box.add_field(name="You lose.", value='\u200b', inline=False)
+
+            self.game_message = await self.get_channel(payload.channel_id).send(embed=self.box)
 
 
 env = loadenv.Env()
