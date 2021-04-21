@@ -1,10 +1,3 @@
-
-# Blackjack
-
-# Make a deck object that draws cards
-# Make a player and/or house object that holds cards
-# Calculate total with sum
-
 import random
 import time
 
