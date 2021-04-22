@@ -171,7 +171,6 @@ class BotClient(discord.Client):
         # Reveals the dealer hand
         # Also starts the dealer drawing process
         if self.stand or self.double or self.bust or self.blackjack:
-            await asyncio.sleep(2.5)
             self.box.set_footer(text=discord.Embed.Empty)
             self.box.clear_fields()
             self.box.add_field(name="Dealer hand", value=self.house.return_hand(), inline=False)
