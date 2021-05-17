@@ -205,5 +205,5 @@ class BotClient(discord.Client):
 
 
 dotenv.load_dotenv()
-key = os.environ['DISCORD_TOKEN']
+key = os.environ['BOT_TOKEN']
 BotClient().run(key)
