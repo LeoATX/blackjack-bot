@@ -11,3 +11,4 @@ pyinstaller==4.2
 pyinstaller-hooks-contrib==2021.1
 typing-extensions==3.7.4.3
 yarl==1.6.3
+python-dotenv

@@ -1,7 +1,7 @@
+import os
 import asyncio
-
-import loadenv
-import discord  # noqa
+import dotenv
+import discord    # noqa
 import deck
 import hand
 
@@ -204,6 +204,6 @@ class BotClient(discord.Client):
             self.game_message = await self.get_channel(payload.channel_id).send(embed=self.box)
 
 
-env = loadenv.Env()
-key = env.getenv('BOT_TOKEN')
+dotenv.load_dotenv()
+key = os.environ['DISCORD_TOKEN']
 BotClient().run(key)
