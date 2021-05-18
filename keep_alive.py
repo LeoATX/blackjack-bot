@@ -1,4 +1,5 @@
 import flask
+import threading
 
 app = flask.Flask('main.py')
 
@@ -8,4 +9,5 @@ def index():
     return flask.render_template("index.html")
 
 
-app.run()
+t = threading.Thread(target=app.run())
+t.start()
